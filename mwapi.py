@@ -18,10 +18,24 @@ undocumented: subj, formula, table
 >
 """
 
-class MWApi:
+class WordNotFoundException(KeyError):
+    def __init__(self, word, suggestions=None, *args, **kwargs):
+        self.word = word
+        if suggestions is None:
+            suggestions = []
+        self.suggestions = suggestions
+        message = "'{0}' not found.".format(word)
+        if suggestions:
+            message = "{0} Try: {1}".format(message, ", ".join(suggestions))
+        KeyError.__init__(self, message, *args, **kwargs)
+
+class MWApiWrapper:
     """ Defines an interface for wrappers to Merriam Webster web APIs. """
 
     __metaclass__ = ABCMeta
+
+    def __init__(self, key=None):
+        self.key = key
 
     @abstractmethod
     def request_url(self, *args):
