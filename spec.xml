@@ -1,0 +1,34 @@
+<entry_list>
+  <suggestion>
+  </suggestion>
+  <entry>
+    <art></art>
+    <hw>headword (required) </hw>
+    <sound>sound</sound>
+    <ahw num="0+"> alternate headword  </ahw>
+    <hsl> "US" or "cheifly US"</hsl>
+    <pr></pr>
+    <altpr></altpr>
+    <sound>sound url</sound>
+    <fl>functional label</fl>
+    <in num="0+">
+      inflection
+      <il>label "plural"</il>
+      <if>inflected form (required)</if>
+    </in>
+    <lb num="0+"> auxillary label (usage spec). Don't care? </lb>
+    <cx> crossref. I don't know what this is. Don't care? </cx>
+    <dx> directional crossref "see X".
+    <dxt> the X in "see X", target.</dxt>
+    <def>
+      <sl> subject/status label "US", "informal" </sl>
+      <sn> sense number (seems useless) </sn>
+      <dt>
+	definition text ":first def :second def"
+	<vi> "verbal illustration" (example) </vi>
+      </dt>
+    </def>
+    </dx>
+
+  </entry>
+</entry_list>
