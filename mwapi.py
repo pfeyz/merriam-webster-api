@@ -42,6 +42,24 @@ class MWApiWrapper:
         """   """
         pass
 
+    def stringify_tree(self, root, test=None):
+        """ Returns concatenation of node.text and node.tail for all nodes in
+        root.
+
+        test is a function accepting a single node as an argument and returning
+        a boolean indicating whether or not this node should be included in the
+        output.
+
+        """
+
+        parts = [root.text] if root.text else []
+        for node in root:
+            if test and not test(node):
+                continue
+            for p in [node.text, node.tail]:
+                if p:
+                    parts.append(p)
+        return ''.join(parts)
 class LearnersDictionaryEntry(object):
     def __init__(self, attrs):
         # word,  pronounce, sound_url, art_url, inflection, pos
