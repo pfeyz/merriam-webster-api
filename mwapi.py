@@ -113,7 +113,7 @@ class LearnersDictionaryEntry(object):
         self.headword = attrs.get("headword")
         self.alternate_headwords = attrs.get("alternate_headwords")
         self.pronunciations = attrs.get("pronunciations")
-        self.functional_label = attrs.get("functional_label")
+        self.function = attrs.get("functional_label")
         # aka pos?
         self.inflections = attrs.get("inflections") # (form, [pr], note,)
         self.senses = attrs.get("senses")
