@@ -87,8 +87,8 @@ class LearnersDictionary(MWApiWrapper):
             args['senses'] = []
             for definition in entry.findall('.//def/dt'):
                 dstring = self.stringify_tree(definition,
-                              lambda x: x.tag not in ['vi', 'wsgram'])
-                usage = [self.vi_to_text(u) for u in definition.findall('vi')]
+                              lambda x: x.tag not in ['vi', 'wsgram', 'un', 'dx'])
+                usage = [self.vi_to_text(u) for u in definition.findall('.//vi')]
                 args['senses'].append((dstring, usage))
             yield LearnersDictionaryEntry(word, args)
 
