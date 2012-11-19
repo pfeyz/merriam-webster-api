@@ -6,21 +6,23 @@ from urllib import quote, quote_plus
 from urllib2 import urlopen
 
 """
-undocumented: subj, formula, table
+undocumented: formula, table
 
-<!ELEMENT entry (((subj?, art?, formula?, table?),
-                  hw, (pr?, pr_alt?, pr_ipa?, pr_wod?, sound?)*,
-                  (ahw, (pr, pr_alt?, pr_ipa?, pr_wod?, sound?)?)*, vr?),
-                 (fl?, in*, lb*, ((cx, (ss | us)h*) | et)*, sl*),
-                 (dx | def)*, (list? | (uro*, dro*,
-                               ((pl, pt, sa?)|(note)|quote+)*))
-                 )>
+<!ELEMENT entry ((art*, formula?, table?),
+                  hw, hsl?, (pr | altpr)?,
+                  (ahw, hsl?, (pr, altpr)?)*,
+                  vr?, fl?, lb*, in*,
+                  ((dx) | (cx?, def?))?,
+                  dro*, dxnl*, uro*, syns*)>
 
-<!ATTLIST entry
-	id CDATA #REQUIRED
-	printing CDATA #IMPLIED
-	rating CDATA #IMPLIED
->
+TODO: extract usage notes from <def> <dt> <un>...</un> </dt> </def>
+
+TODO: handle this:
+
+    $ ./lookup would
+    2. would've (None) /ˈwʊdəv/
+    used as a contraction of
+
 """
 
 class WordNotFoundException(KeyError):
