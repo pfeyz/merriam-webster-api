@@ -49,9 +49,9 @@ class MWApiWrapper:
         """   """
         pass
 
-    def stringify_tree(self, root, test=None):
-        """ Returns concatenation of node.text and node.tail for all nodes in
-        root.
+    def flatten_tree(self, root, test=None):
+        """ Returns a list containing the (non-None) .text and .tail for all
+        nodes in root.
 
         test is a function accepting a single node as an argument and returning
         a boolean indicating whether or not this node should be included in the
@@ -61,12 +61,17 @@ class MWApiWrapper:
 
         parts = [root.text] if root.text else []
         for node in root:
-            if test and not test(node):
-                continue
-            for p in [node.text, node.tail]:
+            targets = [node.tail]
+            if not test or test(node):
+                targets.append(node.text)
+            for p in targets:
                 if p:
                     parts.append(p)
-        return ''.join(parts).strip()
+        return parts
+
+    def stringify_tree(self, *args, **kwargs):
+        " Returns a string of the concatenated results from flatten_tree "
+        return ''.join(self.flatten_tree(*args, **kwargs))
 
 class LearnersDictionary(MWApiWrapper):
     def lookup(self, word):
