@@ -18,7 +18,7 @@
     </in>
     <lb num="0+"> auxillary label (usage spec). Don't care? </lb>
     <cx> crossref. I don't know what this is. Don't care? </cx>
-    <dx> directional crossref "see X".
+    <dx> directional crossref "see X". </dx>
     <dxt> the X in "see X", target.</dxt>
     <def>
       <sl> subject/status label "US", "informal" </sl>
@@ -28,7 +28,6 @@
 	<vi> "verbal illustration" (example) </vi>
       </dt>
     </def>
-    </dx>
 
   </entry>
 </entry_list>
