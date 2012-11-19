@@ -64,7 +64,7 @@ class MWApiWrapper:
             for p in [node.text, node.tail]:
                 if p:
                     parts.append(p)
-        return ''.join(parts)
+        return ''.join(parts).strip()
 
 class LearnersDictionary(MWApiWrapper):
     def lookup(self, word):
@@ -88,13 +88,15 @@ class LearnersDictionary(MWApiWrapper):
             for definition in entry.findall('.//def/dt'):
                 dstring = self.stringify_tree(definition,
                               lambda x: x.tag not in ['vi', 'wsgram', 'un', 'dx'])
+                dstring = re.sub("^:", "", dstring)
+                dstring = re.sub(r'(\s*):', r';\1', dstring)
                 usage = [self.vi_to_text(u) for u in definition.findall('.//vi')]
                 args['senses'].append((dstring, usage))
             yield LearnersDictionaryEntry(word, args)
 
     def vi_to_text(self, root):
         example = self.stringify_tree(root)
-        return re.sub(r'[=.*?]', '', example)
+        return re.sub(r'\s*\[=.*?\]', '', example)
 
     def request_url(self, word):
         if self.key is None:
