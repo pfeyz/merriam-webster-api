@@ -90,7 +90,10 @@ class LearnersDictionary(MWApiWrapper):
             sound = entry.find("sound")
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
-            args['functional_label'] = entry.find('fl').text
+            try:
+                args['functional_label'] = entry.find('fl').text
+            except AttributeError:
+                args['functional_label'] = None
             args['senses'] = []
             for definition in entry.findall('.//def/dt'):
                 dstring = self.stringify_tree(definition,
