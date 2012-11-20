@@ -91,6 +91,7 @@ class LearnersDictionary(MWApiWrapper):
                 pron_list.extend(ps)
             args['pronunciations'] = [p.strip(', ') for p in pron_list]
             sound = entry.find("sound")
+            args['sound_fragments'] = []
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
             try:
@@ -141,5 +142,15 @@ class LearnersDictionaryEntry(object):
         self.inflections = attrs.get("inflections") # (form, [pr], note,)
         self.senses = attrs.get("senses")
         # list of (["def text"], ["examples"], ["notes"])
-        sound_fragments = attrs.get("sound_fragments")
+        self.audio = [self.build_sound_url(f) for f in
+                      attrs.get("sound_fragments")]
         art_fragment = attrs.get("art_fragment")
+
+    def build_sound_url(self, fragment):
+        base_url = "http://media.merriam-webster.com/soundc11"
+        prefix_match = re.search(r'^([0-9]+|gg|bix)', fragment)
+        if prefix_match:
+            prefix = prefix_match.group(1)
+        else:
+            prefix = fragment[0]
+        return "{0}/{1}/{2}".format(base_url, prefix, fragment)
