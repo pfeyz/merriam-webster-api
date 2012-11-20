@@ -17,6 +17,16 @@ undocumented: formula, table
                   ((dx) | (cx?, def?))?,
                   dro*, dxnl*, uro*, syns*)>
 
+TODO:
+
+  - capture usage notes in a separate member var?
+
+  - include uro (undefined runoff)? these appear to be variations on the entry
+    word and have usage examples but no definitions.
+
+  - Merriam Webster seems not to be encoding & correctly in their <suggestion>
+    tags.
+
 """
 
 class WordNotFoundException(KeyError):
@@ -28,6 +38,13 @@ class WordNotFoundException(KeyError):
         message = "'{0}' not found.".format(word)
         if suggestions:
             message = "{0} Try: {1}".format(message, ", ".join(suggestions))
+        KeyError.__init__(self, message, *args, **kwargs)
+
+class InvalidResponseException(WordNotFoundException):
+    def __init__(self, word, *args, **kwargs):
+        self.word = word
+        self.suggestions = []
+        message = "{0} not found. (Malformed XML from server).".format(word)
         KeyError.__init__(self, message, *args, **kwargs)
 
 class MWApiWrapper:
@@ -70,7 +87,10 @@ class LearnersDictionary(MWApiWrapper):
     def lookup(self, word):
         response = urlopen(self.request_url(word))
         data = response.read()
-        root = ElementTree.fromstring(data)
+        try:
+            root = ElementTree.fromstring(data)
+        except ElementTree.ParseError:
+            raise InvalidResponseException(word)
         entries = root.findall("entry")
         if not entries:
             suggestions = root.findall("suggestion")
