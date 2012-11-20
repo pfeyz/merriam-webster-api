@@ -17,14 +17,6 @@ undocumented: formula, table
                   ((dx) | (cx?, def?))?,
                   dro*, dxnl*, uro*, syns*)>
 
-TODO: extract usage notes from <def> <dt> <un>...</un> </dt> </def>
-
-TODO: handle this:
-
-    $ ./lookup would
-    2. would've (None) /ˈwʊdəv/
-    used as a contraction of
-
 """
 
 class WordNotFoundException(KeyError):
@@ -107,11 +99,21 @@ class LearnersDictionary(MWApiWrapper):
                 args['functional_label'] = None
             args['senses'] = []
             for definition in entry.findall('.//def/dt'):
+                # could add support for phrasal verbs here by looking for
+                # <gram>phrasal verb</gram> and then looking for the phrase
+                # itself in <dre>phrase</dre> in the def node or its parent.
                 dstring = self.stringify_tree(definition,
-                              lambda x: x.tag not in ['vi', 'wsgram', 'un', 'dx'])
+                                              exclude=['vi', 'wsgram',
+                                                       'ca', 'dx', 'snote',
+                                                       'un'])
                 dstring = re.sub("^:", "", dstring)
                 dstring = re.sub(r'(\s*):', r';\1', dstring)
-                usage = [self.vi_to_text(u) for u in definition.findall('.//vi')]
+                if not dstring:  # use usage note instead
+                    un = definition.find('un')
+                    if un is not None:
+                        dstring = self.stringify_tree(un, exclude=['vi'])
+                usage = [self.vi_to_text(u)
+                         for u in definition.findall('.//vi')]
                 args['senses'].append((dstring, usage))
             yield LearnersDictionaryEntry(word, args)
 
