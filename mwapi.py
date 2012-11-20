@@ -65,7 +65,7 @@ class MWApiWrapper:
         for node in root:
             targets = [node.tail]
             if not test or test(node):
-                targets.append(node.text)
+                targets.insert(0, node.text)
             for p in targets:
                 if p:
                     parts.append(p)
