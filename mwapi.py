@@ -88,11 +88,16 @@ class LearnersDictionary(MWApiWrapper):
         for num, entry in enumerate(entries):
             args = {}
             args['headword'] = entry.find("hw").text
-            prons = entry.find("pr")
+            prons = entry.find("./pr")
+            pron_list = []
             if prons is not None:
-                ps = self.flatten_tree(prons, lambda x: x.tag != 'it')
-                ps = [p.strip(', ') for p in ps]
-                args['pronunciations'] = ps
+                ps = self.flatten_tree(prons, exclude=['it'])
+                pron_list.extend(ps)
+            prons = entry.find("./altpr")
+            if prons is not None:
+                ps = self.flatten_tree(prons, exclude=['it'])
+                pron_list.extend(ps)
+            args['pronunciations'] = [p.strip(', ') for p in pron_list]
             sound = entry.find("sound")
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
