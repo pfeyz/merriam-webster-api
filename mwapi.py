@@ -51,20 +51,19 @@ class MWApiWrapper:
         """   """
         pass
 
-    def flatten_tree(self, root, test=None):
+    def flatten_tree(self, root, exclude=None):
         """ Returns a list containing the (non-None) .text and .tail for all
         nodes in root.
 
-        test is a function accepting a single node as an argument and returning
-        a boolean indicating whether or not this node should be included in the
-        output.
+        exclude is a list of tag names whose text attributes should be
+        excluded. their tails will still be included.
 
         """
 
         parts = [root.text] if root.text else []
         for node in root:
             targets = [node.tail]
-            if not test or test(node):
+            if not exclude or node.tag not in exclude:
                 targets.insert(0, node.text)
             for p in targets:
                 if p:
