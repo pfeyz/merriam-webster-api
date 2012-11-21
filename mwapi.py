@@ -126,10 +126,6 @@ class LearnersDictionary(MWApiWrapper):
             args['sound_fragments'] = []
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
-            try:
-                args['functional_label'] = entry.find('fl').text
-            except AttributeError:
-                args['functional_label'] = None
             args['senses'] = []
             for definition in entry.findall('.//def/dt'):
                 # could add support for phrasal verbs here by looking for
@@ -148,6 +144,7 @@ class LearnersDictionary(MWApiWrapper):
                 usage = [self.vi_to_text(u)
                          for u in definition.findall('.//vi')]
                 args['senses'].append((dstring, usage))
+            args['functional_label'] = getattr(entry.find('fl'), 'text', None)
             yield LearnersDictionaryEntry(word, args)
 
     def vi_to_text(self, root):
