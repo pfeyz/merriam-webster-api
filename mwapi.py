@@ -84,6 +84,20 @@ class MWApiWrapper:
         return ''.join(self.flatten_tree(*args, **kwargs))
 
 class LearnersDictionary(MWApiWrapper):
+
+    def _get_pronunciations(self, root):
+        prons = root.find("./pr")
+        pron_list = []
+        if prons is not None:
+            ps = self.flatten_tree(prons, exclude=['it'])
+            pron_list.extend(ps)
+        prons = root.find("./altpr")
+        if prons is not None:
+            ps = self.flatten_tree(prons, exclude=['it'])
+            pron_list.extend(ps)
+        return [p.strip(', ') for p in pron_list]
+
+
     def lookup(self, word):
         response = urlopen(self.request_url(word))
         data = response.read()
@@ -107,16 +121,7 @@ class LearnersDictionary(MWApiWrapper):
                                      entry.findall("art/artref")
                                      if e.get('id')]
             args['headword'] = entry.find("hw").text
-            prons = entry.find("./pr")
-            pron_list = []
-            if prons is not None:
-                ps = self.flatten_tree(prons, exclude=['it'])
-                pron_list.extend(ps)
-            prons = entry.find("./altpr")
-            if prons is not None:
-                ps = self.flatten_tree(prons, exclude=['it'])
-                pron_list.extend(ps)
-            args['pronunciations'] = [p.strip(', ') for p in pron_list]
+            args['pronunciations'] = self._get_pronunciations(entry)
             sound = entry.find("sound")
             args['sound_fragments'] = []
             if sound:
