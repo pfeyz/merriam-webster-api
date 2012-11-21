@@ -97,6 +97,29 @@ class LearnersDictionary(MWApiWrapper):
             pron_list.extend(ps)
         return [p.strip(', ') for p in pron_list]
 
+    def _get_senses(self, root):
+        """ Returns a generator yielding tuples of definitions and example
+        sentences: (definition_string, list_of_usag_example_strings). Each tuple
+        should represent a different sense of the word.
+
+        """
+        for definition in root.findall('.//def/dt'):
+            # could add support for phrasal verbs here by looking for
+            # <gram>phrasal verb</gram> and then looking for the phrase
+            # itself in <dre>phrase</dre> in the def node or its parent.
+            dstring = self.stringify_tree(definition,
+                                          exclude=['vi', 'wsgram',
+                                                   'ca', 'dx', 'snote',
+                                                   'un'])
+            dstring = re.sub("^:", "", dstring)
+            dstring = re.sub(r'(\s*):', r';\1', dstring)
+            if not dstring:  # use usage note instead
+                un = definition.find('un')
+                if un is not None:
+                    dstring = self.stringify_tree(un, exclude=['vi'])
+            usage = [self.vi_to_text(u)
+                     for u in definition.findall('.//vi')]
+            yield (dstring, usage)
 
     def lookup(self, word):
         response = urlopen(self.request_url(word))
@@ -126,25 +149,8 @@ class LearnersDictionary(MWApiWrapper):
             args['sound_fragments'] = []
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
-            args['senses'] = []
-            for definition in entry.findall('.//def/dt'):
-                # could add support for phrasal verbs here by looking for
-                # <gram>phrasal verb</gram> and then looking for the phrase
-                # itself in <dre>phrase</dre> in the def node or its parent.
-                dstring = self.stringify_tree(definition,
-                                              exclude=['vi', 'wsgram',
-                                                       'ca', 'dx', 'snote',
-                                                       'un'])
-                dstring = re.sub("^:", "", dstring)
-                dstring = re.sub(r'(\s*):', r';\1', dstring)
-                if not dstring:  # use usage note instead
-                    un = definition.find('un')
-                    if un is not None:
-                        dstring = self.stringify_tree(un, exclude=['vi'])
-                usage = [self.vi_to_text(u)
-                         for u in definition.findall('.//vi')]
-                args['senses'].append((dstring, usage))
             args['functional_label'] = getattr(entry.find('fl'), 'text', None)
+            args['senses'] = self._get_senses(entry)
             yield LearnersDictionaryEntry(word, args)
 
     def vi_to_text(self, root):
