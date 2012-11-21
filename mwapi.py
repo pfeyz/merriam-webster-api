@@ -60,7 +60,7 @@ class MWApiWrapper:
         """   """
         pass
 
-    def flatten_tree(self, root, exclude=None):
+    def _flatten_tree(self, root, exclude=None):
         """ Returns a list containing the (non-None) .text and .tail for all
         nodes in root.
 
@@ -79,47 +79,11 @@ class MWApiWrapper:
                     parts.append(p)
         return parts
 
-    def stringify_tree(self, *args, **kwargs):
-        " Returns a string of the concatenated results from flatten_tree "
-        return ''.join(self.flatten_tree(*args, **kwargs))
+    def _stringify_tree(self, *args, **kwargs):
+        " Returns a string of the concatenated results from _flatten_tree "
+        return ''.join(self._flatten_tree(*args, **kwargs))
 
 class LearnersDictionary(MWApiWrapper):
-
-    def _get_pronunciations(self, root):
-        prons = root.find("./pr")
-        pron_list = []
-        if prons is not None:
-            ps = self.flatten_tree(prons, exclude=['it'])
-            pron_list.extend(ps)
-        prons = root.find("./altpr")
-        if prons is not None:
-            ps = self.flatten_tree(prons, exclude=['it'])
-            pron_list.extend(ps)
-        return [p.strip(', ') for p in pron_list]
-
-    def _get_senses(self, root):
-        """ Returns a generator yielding tuples of definitions and example
-        sentences: (definition_string, list_of_usag_example_strings). Each tuple
-        should represent a different sense of the word.
-
-        """
-        for definition in root.findall('.//def/dt'):
-            # could add support for phrasal verbs here by looking for
-            # <gram>phrasal verb</gram> and then looking for the phrase
-            # itself in <dre>phrase</dre> in the def node or its parent.
-            dstring = self.stringify_tree(definition,
-                                          exclude=['vi', 'wsgram',
-                                                   'ca', 'dx', 'snote',
-                                                   'un'])
-            dstring = re.sub("^:", "", dstring)
-            dstring = re.sub(r'(\s*):', r';\1', dstring)
-            if not dstring:  # use usage note instead
-                un = definition.find('un')
-                if un is not None:
-                    dstring = self.stringify_tree(un, exclude=['vi'])
-            usage = [self.vi_to_text(u)
-                     for u in definition.findall('.//vi')]
-            yield (dstring, usage)
 
     def lookup(self, word):
         response = urlopen(self.request_url(word))
@@ -153,16 +117,53 @@ class LearnersDictionary(MWApiWrapper):
             args['senses'] = self._get_senses(entry)
             yield LearnersDictionaryEntry(word, args)
 
-    def vi_to_text(self, root):
-        example = self.stringify_tree(root)
-        return re.sub(r'\s*\[=.*?\]', '', example)
-
     def request_url(self, word):
         if self.key is None:
             raise Exception("API key not set")
         qstring = "{0}?key={1}".format(quote(word), quote_plus(self.key))
         return ("http://www.dictionaryapi.com/api/v1/references/learners"
                 "/xml/{0}").format(qstring)
+
+    def _get_pronunciations(self, root):
+        """ Returns list of IPA for regular and 'alternative' pronunciation. """
+        prons = root.find("./pr")
+        pron_list = []
+        if prons is not None:
+            ps = self._flatten_tree(prons, exclude=['it'])
+            pron_list.extend(ps)
+        prons = root.find("./altpr")
+        if prons is not None:
+            ps = self._flatten_tree(prons, exclude=['it'])
+            pron_list.extend(ps)
+        return [p.strip(', ') for p in pron_list]
+
+    def _get_senses(self, root):
+        """ Returns a generator yielding tuples of definitions and example
+        sentences: (definition_string, list_of_usag_example_strings). Each tuple
+        should represent a different sense of the word.
+
+        """
+        for definition in root.findall('.//def/dt'):
+            # could add support for phrasal verbs here by looking for
+            # <gram>phrasal verb</gram> and then looking for the phrase
+            # itself in <dre>phrase</dre> in the def node or its parent.
+            dstring = self._stringify_tree(definition,
+                                          exclude=['vi', 'wsgram',
+                                                   'ca', 'dx', 'snote',
+                                                   'un'])
+            dstring = re.sub("^:", "", dstring)
+            dstring = re.sub(r'(\s*):', r';\1', dstring)
+            if not dstring:  # use usage note instead
+                un = definition.find('un')
+                if un is not None:
+                    dstring = self._stringify_tree(un, exclude=['vi'])
+            usage = [self._vi_to_text(u)
+                     for u in definition.findall('.//vi')]
+            yield (dstring, usage)
+
+    def _vi_to_text(self, root):
+        example = self._stringify_tree(root)
+        return re.sub(r'\s*\[=.*?\]', '', example)
 
 class LearnersDictionaryEntry(object):
     def __init__(self, word, attrs):
@@ -173,10 +174,8 @@ class LearnersDictionaryEntry(object):
         self.alternate_headwords = attrs.get("alternate_headwords")
         self.pronunciations = attrs.get("pronunciations")
         self.function = attrs.get("functional_label")
-        # aka pos?
         self.inflections = attrs.get("inflections") # (form, [pr], note,)
-        self.senses = attrs.get("senses")
-        # list of (["def text"], ["examples"], ["notes"])
+        self.senses = attrs.get("senses")  # list of ("def text", ["examples"]
         self.audio = [self.build_sound_url(f) for f in
                       attrs.get("sound_fragments")]
         self.illustrations = [self.build_illustration_url(f) for f in
