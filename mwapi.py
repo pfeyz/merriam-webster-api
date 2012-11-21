@@ -90,7 +90,11 @@ class LearnersDictionary(MWApiWrapper):
         try:
             root = ElementTree.fromstring(data)
         except ElementTree.ParseError:
-            raise InvalidResponseException(word)
+            data = re.sub(r'&(?!amp;)', '&amp;', data)
+            try:
+                root = ElementTree.fromstring(data)
+            except ElementTree.ParseError:
+                raise InvalidResponseException(word)
         entries = root.findall("entry")
         if not entries:
             suggestions = root.findall("suggestion")
