@@ -103,6 +103,9 @@ class LearnersDictionary(MWApiWrapper):
             raise WordNotFoundException(word, suggestions)
         for num, entry in enumerate(entries):
             args = {}
+            args['illustration_fragments'] = [e.get('id') for e in
+                                     entry.findall("art/artref")
+                                     if e.get('id')]
             args['headword'] = entry.find("hw").text
             prons = entry.find("./pr")
             pron_list = []
@@ -168,7 +171,8 @@ class LearnersDictionaryEntry(object):
         # list of (["def text"], ["examples"], ["notes"])
         self.audio = [self.build_sound_url(f) for f in
                       attrs.get("sound_fragments")]
-        art_fragment = attrs.get("art_fragment")
+        self.illustrations = [self.build_illustration_url(f) for f in
+                              attrs.get("illustration_fragments")]
 
     def build_sound_url(self, fragment):
         base_url = "http://media.merriam-webster.com/soundc11"
@@ -178,3 +182,8 @@ class LearnersDictionaryEntry(object):
         else:
             prefix = fragment[0]
         return "{0}/{1}/{2}".format(base_url, prefix, fragment)
+
+    def build_illustration_url(self, fragment):
+        base_url = "www.learnersdictionary.com/art/ld"
+        fragment = re.sub(r'\.(tif|eps)', '.gif', fragment)
+        return "{0}/{1}".format(base_url, fragment)
