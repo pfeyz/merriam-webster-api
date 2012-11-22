@@ -55,8 +55,12 @@ class MWApiWrapper:
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, key=None):
+    def __init__(self, key=None, urlopen=urlopen):
+        """ key is the API key string to use for requests. urlopen is a function
+        that accepts a url string and returns a file-like object of the results
+        of fetching the url. defaults to urllib2.urlopen, and should throw """
         self.key = key
+        self.urlopen = urlopen
 
     @abstractmethod
     def request_url(self, *args):
@@ -89,7 +93,7 @@ class MWApiWrapper:
 class LearnersDictionary(MWApiWrapper):
 
     def lookup(self, word):
-        response = urlopen(self.request_url(word))
+        response = self.urlopen(self.request_url(word))
         data = response.read()
         try:
             root = ElementTree.fromstring(data)
