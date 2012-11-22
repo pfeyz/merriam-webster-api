@@ -47,6 +47,9 @@ class InvalidResponseException(WordNotFoundException):
         message = "{0} not found. (Malformed XML from server).".format(word)
         KeyError.__init__(self, message, *args, **kwargs)
 
+class InvalidAPIKeyException(Exception):
+    pass
+
 class MWApiWrapper:
     """ Defines an interface for wrappers to Merriam Webster web APIs. """
 
@@ -91,6 +94,8 @@ class LearnersDictionary(MWApiWrapper):
         try:
             root = ElementTree.fromstring(data)
         except ElementTree.ParseError:
+            if re.search("Invalid API key", data):
+                raise InvalidAPIKeyException()
             data = re.sub(r'&(?!amp;)', '&amp;', data)
             try:
                 root = ElementTree.fromstring(data)
