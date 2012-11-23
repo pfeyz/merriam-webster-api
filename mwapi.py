@@ -168,11 +168,26 @@ class LearnersDictionary(MWApiWrapper):
                     dstring = self._stringify_tree(un, exclude=['vi'])
             usage = [self._vi_to_text(u).strip()
                      for u in definition.findall('.//vi')]
-            yield (dstring, usage)
+            yield WordSense(dstring, usage)
 
     def _vi_to_text(self, root):
         example = self._stringify_tree(root)
         return re.sub(r'\s*\[=.*?\]', '', example)
+
+class WordSense(object):
+    def __init__(self, definition, examples):
+        self.definition = definition
+        self.examples = examples
+
+    def __str__(self):
+        return "{0}, ex: [{1}]".format(self.definition[:30],
+                                    ", ".join(i[:15] for i in self.examples))
+    def __repr__(self):
+        return "WordSense({0})".format(self.__str__())
+
+    def __iter__(self):
+        yield self.definition
+        yield self.examples
 
 class LearnersDictionaryEntry(object):
     def __init__(self, word, attrs):
