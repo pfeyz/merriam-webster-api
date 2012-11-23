@@ -123,6 +123,7 @@ class LearnersDictionary(MWApiWrapper):
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
             args['functional_label'] = getattr(entry.find('fl'), 'text', None)
+            args['inflections'] = self._get_inflections(entry)
             args['senses'] = self._get_senses(entry)
             yield LearnersDictionaryEntry(word, args)
 
@@ -132,6 +133,13 @@ class LearnersDictionary(MWApiWrapper):
         qstring = "{0}?key={1}".format(quote(word), quote_plus(self.key))
         return ("http://www.dictionaryapi.com/api/v1/references/learners"
                 "/xml/{0}").format(qstring)
+
+    def _get_inflections(self, root):
+        for node in root.findall("in"):
+            label = getattr(node.find("il"), 'text')
+            form = node.find("if").text
+            prons = self._get_pronunciations(node)
+            yield Inflection(label, form, prons)
 
     def _get_pronunciations(self, root):
         """ Returns list of IPA for regular and 'alternative' pronunciation. """
@@ -173,6 +181,12 @@ class LearnersDictionary(MWApiWrapper):
     def _vi_to_text(self, root):
         example = self._stringify_tree(root)
         return re.sub(r'\s*\[=.*?\]', '', example)
+
+class Inflection(object):
+    def __init__(self, label, form, pronunciations):
+        self.label = label
+        self.form = form
+        self. pronunciations = pronunciations
 
 class WordSense(object):
     def __init__(self, definition, examples):
