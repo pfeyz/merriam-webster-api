@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import re
 import unittest
 from os import path
