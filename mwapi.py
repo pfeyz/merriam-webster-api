@@ -148,8 +148,8 @@ class LearnersDictionary(MWApiWrapper):
 
     def _get_senses(self, root):
         """ Returns a generator yielding tuples of definitions and example
-        sentences: (definition_string, list_of_usag_example_strings). Each tuple
-        should represent a different sense of the word.
+        sentences: (definition_string, list_of_usage_example_strings). Each
+        tuple should represent a different sense of the word.
 
         """
         for definition in root.findall('.//def/dt'):
@@ -161,12 +161,12 @@ class LearnersDictionary(MWApiWrapper):
                                                    'ca', 'dx', 'snote',
                                                    'un'])
             dstring = re.sub("^:", "", dstring)
-            dstring = re.sub(r'(\s*):', r';\1', dstring)
+            dstring = re.sub(r'(\s*):', r';\1', dstring).strip()
             if not dstring:  # use usage note instead
                 un = definition.find('un')
                 if un is not None:
                     dstring = self._stringify_tree(un, exclude=['vi'])
-            usage = [self._vi_to_text(u)
+            usage = [self._vi_to_text(u).strip()
                      for u in definition.findall('.//vi')]
             yield (dstring, usage)
 
