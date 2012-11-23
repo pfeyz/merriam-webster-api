@@ -26,6 +26,30 @@ class LearnerTests(MerriamWebsterTestCase):
     def setUp(self):
         self.dictionary = LearnersDictionary(self.api_key,
                                              self._mock_url_opener())
+
+    def test_attribute_parsing(self):
+        entries = list(self.dictionary.lookup("pirate"))
+        self.assertEqual(2, len(entries))
+        entry = entries[0]
+        self.assertEqual("pirate", entry.word)
+        self.assertEqual("pi*rate", entry.headword)
+        self.assertEqual("noun", entry.function)
+        self.assertEqual(u"ˈpaɪrət", entry.pronunciations[0])
+        senses = list(entry.senses)
+        self.assertEqual(3, len(senses))
+
+        sense = senses[0]
+        definition, examples = sense
+        self.assertTrue(
+            definition.startswith("someone who attacks and steals"))
+        self.assertEqual(2, len(examples))
+
+        sense = senses[1]
+        self.assertTrue(
+            sense.definition.startswith("someone who illegally copies"))
+        self.assertEqual(3, len(sense.examples))
+
+
     def test_word_not_found(self):
         with self.assertRaises(WordNotFoundException):
             try:
