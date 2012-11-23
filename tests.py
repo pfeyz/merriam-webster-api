@@ -2,7 +2,7 @@
 
 import re
 import unittest
-from os import path
+from os import path, getenv
 
 from mwapi import LearnersDictionary, WordNotFoundException
 
@@ -18,7 +18,7 @@ class MerriamWebsterTestCase(unittest.TestCase):
 class LearnerTests(MerriamWebsterTestCase):
     @classmethod
     def setUpClass(cls):
-        cls.api_key = ""
+        cls.api_key = getenv("MERRIAM_WEBSTER_LEARNERS_KEY")
         cls.fixture_dir = "fixtures/learners"
         cls.base_url = \
             "http://www.dictionaryapi.com/api/v1/references/learners/xml/"
