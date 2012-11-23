@@ -38,6 +38,13 @@ class LearnerTests(MerriamWebsterTestCase):
         senses = list(entry.senses)
         self.assertEqual(3, len(senses))
 
+        inflections = entry.inflections
+        self.assertEquals(1, len(inflections))
+        self.assertEquals(inflections[0].label,
+                          "plural")
+        self.assertEquals(inflections[0].form,
+                          "pi*rates")
+
         sense = senses[0]
         definition, examples = sense
         self.assertTrue(
