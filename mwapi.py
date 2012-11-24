@@ -160,7 +160,7 @@ class LearnersDictionary(MWApiWrapper):
         tuple should represent a different sense of the word.
 
         """
-        for definition in root.findall('.//def/dt'):
+        for definition in root.findall('./def/dt'):
             # could add support for phrasal verbs here by looking for
             # <gram>phrasal verb</gram> and then looking for the phrase
             # itself in <dre>phrase</dre> in the def node or its parent.
