@@ -125,7 +125,9 @@ class LearnersDictionary(MWApiWrapper):
             args['functional_label'] = getattr(entry.find('fl'), 'text', None)
             args['inflections'] = self._get_inflections(entry)
             args['senses'] = self._get_senses(entry)
-            yield LearnersDictionaryEntry(entry.get('id'), args)
+            yield LearnersDictionaryEntry(
+                re.sub(r'(?:\[\d+\])?\s*', '', entry.get('id')),
+                       args)
 
     def request_url(self, word):
         if self.key is None:
