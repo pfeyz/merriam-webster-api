@@ -2,30 +2,49 @@
 
 import re
 import unittest
+import urllib2
 from os import path, getenv
 
 from mwapi import LearnersDictionary, WordNotFoundException
 
 class MerriamWebsterTestCase(unittest.TestCase):
-    def _mock_url_opener(self):
+
+    def _cached_url_opener(self):
+        """ Mocks urllib2.urlopen.
+
+        Returns a function which returns cached-to-disk MW data.
+
+        If no xml fixture file is found, it's fetched from MW. This allows us to
+        run lots of tests without worrying about surpassing the 1000 req/day API
+        limit while avoiding copyright infringement by not distributing MW's
+        data with this codebase.
+
+        """
         def opener(url):
-            fn = re.sub(r"^%s" % self.base_url, "", url)
-            fn = re.sub(r"\?.*$", "", fn)
+            fn = re.sub(r"^%s" % self.request_prefix, "", url)
+            fn = re.sub(r"\?.*$", "", fn)  # strip api key
             fn = path.join(self.fixture_dir, "{0}.xml".format(fn))
-            return open(fn, 'r')
+            try:
+                return open(fn, 'r')
+            except IOError:
+                data = urllib2.urlopen(url)
+                with open(fn, 'w') as fh:
+                    fh.write(data.read())
+                return open(fn, 'r')
         return opener
 
 class LearnerTests(MerriamWebsterTestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.api_key = getenv("MERRIAM_WEBSTER_LEARNERS_KEY")
-        cls.fixture_dir = "fixtures/learners"
-        cls.base_url = \
+        cls.fixture_dir = path.join("fixtures", "learners")
+        cls.request_prefix = \
             "http://www.dictionaryapi.com/api/v1/references/learners/xml/"
 
     def setUp(self):
         self.dictionary = LearnersDictionary(self.api_key,
-                                             self._mock_url_opener())
+                                             self._cached_url_opener())
 
     def test_attribute_parsing(self):
         entries = list(self.dictionary.lookup("pirate"))
