@@ -138,10 +138,21 @@ class LearnersDictionary(MWApiWrapper):
 
     def _get_inflections(self, root):
         for node in root.findall("in"):
-            label = getattr(node.find("il"), 'text')
-            form = node.find("if").text
-            prons = self._get_pronunciations(node)
-            yield Inflection(label, form, prons)
+            label, forms = None, []
+            for child in node:
+                if child.tag == 'il':
+                    if child.text == 'also':
+                        pass  # will be added to previous inflection
+                    else:
+                        if label is not None or forms != []:
+                            yield Inflection(label, forms)
+                        label, forms = child.text, []
+                if child.tag == 'if':
+                    forms.append(child.text)
+            if label is not None or forms != []:
+                yield Inflection(label, forms)
+                label, forms = None, []
+
 
     def _get_pronunciations(self, root):
         """ Returns list of IPA for regular and 'alternative' pronunciation. """
