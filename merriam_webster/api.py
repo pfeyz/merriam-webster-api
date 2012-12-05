@@ -196,10 +196,9 @@ class LearnersDictionary(MWApiWrapper):
         return re.sub(r'\s*\[=.*?\]', '', example)
 
 class Inflection(object):
-    def __init__(self, label, form, pronunciations):
+    def __init__(self, label, forms):
         self.label = label
-        self.form = form
-        self. pronunciations = pronunciations
+        self.forms = forms
 
 class WordSense(object):
     def __init__(self, definition, examples):
