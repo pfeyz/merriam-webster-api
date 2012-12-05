@@ -50,15 +50,15 @@ class LearnerTests(MerriamWebsterTestCase):
     def test_attribute_parsing(self):
         entries = list(self.dictionary.lookup("pirate"))
         self.assertEqual(2, len(entries))
-        entry = entries[0]
-        self.assertEqual("pirate", entry.word)
-        self.assertEqual("pi*rate", entry.headword)
-        self.assertEqual("noun", entry.function)
-        self.assertEqual(u"ˈpaɪrət", entry.pronunciations[0])
-        senses = list(entry.senses)
+        first_entry = entries[0]
+        self.assertEqual("pirate", first_entry.word)
+        self.assertEqual("pi*rate", first_entry.headword)
+        self.assertEqual("noun", first_entry.function)
+        self.assertEqual(u"ˈpaɪrət", first_entry.pronunciations[0])
+        senses = list(first_entry.senses)
         self.assertEqual(3, len(senses))
 
-        inflections = list(entry.inflections)
+        inflections = list(first_entry.inflections)
         self.assertEquals(1, len(inflections))
         self.assertEquals(inflections[0].label,
                           "plural")
@@ -77,7 +77,6 @@ class LearnerTests(MerriamWebsterTestCase):
             sense.definition.startswith("someone who illegally copies"))
         self.assertEqual(3, len(sense.examples))
 
-
     def test_word_not_found(self):
         with self.assertRaises(WordNotFoundException):
             try:
@@ -86,10 +85,11 @@ class LearnerTests(MerriamWebsterTestCase):
                 self.assertTrue(len(e.suggestions) > 0)
                 raise e
 
-    def test_handle_malformed_xmlq(self):
+    def test_handle_malformed_xml(self):
         with self.assertRaisesRegexp(WordNotFoundException,
                                      r'.* not found\.( Try:.*)?$'):
             list(self.dictionary.lookup("3rd"))
+
 
 if __name__ == '__main__':
     unittest.main()
