@@ -5,7 +5,7 @@ import unittest
 import urllib2
 from os import path, getenv
 
-from mwapi import LearnersDictionary, WordNotFoundException
+from api import LearnersDictionary, WordNotFoundException
 
 class MerriamWebsterTestCase(unittest.TestCase):
 
