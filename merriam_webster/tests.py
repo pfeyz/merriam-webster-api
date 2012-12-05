@@ -77,6 +77,23 @@ class LearnerTests(MerriamWebsterTestCase):
             sense.definition.startswith("someone who illegally copies"))
         self.assertEqual(3, len(sense.examples))
 
+        entries = list(self.dictionary.lookup("starfish"))
+        starfish = entries[0]
+        inflections = list(starfish.inflections)
+        self.assertEquals(1, len(inflections))
+        self.assertEquals('plural', inflections[0].label)
+        self.assertEquals('star*fish', inflections[0].forms[0])
+        self.assertEquals('star*fish*es', inflections[0].forms[1])
+        self.assertEquals('noun', starfish.function)
+        self.assertEquals("www.learnersdictionary.com/art/ld/starfish.gif",
+                          starfish.illustrations[0])
+        self.assertEquals(
+            "http://media.merriam-webster.com/soundc11/s/starfi01.wav",
+            starfish.audio[0])
+        senses = list(starfish.senses)
+        self.assertEquals(1, len(senses))
+        self.assertTrue(senses[0].definition.startswith('a sea animal'))
+
     def test_word_not_found(self):
         with self.assertRaises(WordNotFoundException):
             try:
