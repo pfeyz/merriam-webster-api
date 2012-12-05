@@ -7,6 +7,8 @@ from os import path, getenv
 
 from api import LearnersDictionary, WordNotFoundException
 
+TEST_DIR = path.dirname(__file__)
+
 class MerriamWebsterTestCase(unittest.TestCase):
 
     def _cached_url_opener(self):
@@ -39,7 +41,7 @@ class LearnerTests(MerriamWebsterTestCase):
     @classmethod
     def setUpClass(cls):
         cls.api_key = getenv("MERRIAM_WEBSTER_LEARNERS_KEY")
-        cls.data_dir = path.join("test_data", "learners")
+        cls.data_dir = path.join(TEST_DIR, "test_data", "learners")
         cls.request_prefix = \
             "http://www.dictionaryapi.com/api/v1/references/learners/xml/"
 
