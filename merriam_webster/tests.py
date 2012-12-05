@@ -14,7 +14,7 @@ class MerriamWebsterTestCase(unittest.TestCase):
 
         Returns a function which returns cached-to-disk MW data.
 
-        If no xml fixture file is found, it's fetched from MW. This allows us to
+        If no xml test data is found, it's fetched from MW. This allows us to
         run lots of tests without worrying about surpassing the 1000 req/day API
         limit while avoiding copyright infringement by not distributing MW's
         data with this codebase.
@@ -23,7 +23,7 @@ class MerriamWebsterTestCase(unittest.TestCase):
         def opener(url):
             fn = re.sub(r"^%s" % self.request_prefix, "", url)
             fn = re.sub(r"\?.*$", "", fn)  # strip api key
-            fn = path.join(self.fixture_dir, "{0}.xml".format(fn))
+            fn = path.join(self.data_dir, "{0}.xml".format(fn))
             try:
                 return open(fn, 'r')
             except IOError:
@@ -33,12 +33,13 @@ class MerriamWebsterTestCase(unittest.TestCase):
                 return open(fn, 'r')
         return opener
 
+
 class LearnerTests(MerriamWebsterTestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.api_key = getenv("MERRIAM_WEBSTER_LEARNERS_KEY")
-        cls.fixture_dir = path.join("fixtures", "learners")
+        cls.data_dir = path.join("test_data", "learners")
         cls.request_prefix = \
             "http://www.dictionaryapi.com/api/v1/references/learners/xml/"
 
