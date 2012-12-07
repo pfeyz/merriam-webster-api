@@ -137,12 +137,18 @@ class LearnersDictionary(MWApiWrapper):
                 "/xml/{0}").format(qstring)
 
     def _get_inflections(self, root):
+        """ Returns a generator of Inflections found in root.
+
+        inflection nodes that have <il>also</il> will have their inflected form
+        added to the previous inflection entry.
+
+        """
         for node in root.findall("in"):
             label, forms = None, []
             for child in node:
                 if child.tag == 'il':
                     if child.text == 'also':
-                        pass  # will be added to previous inflection
+                        pass  # next form will be added to prev inflection-list
                     else:
                         if label is not None or forms != []:
                             yield Inflection(label, forms)
@@ -151,8 +157,6 @@ class LearnersDictionary(MWApiWrapper):
                     forms.append(child.text)
             if label is not None or forms != []:
                 yield Inflection(label, forms)
-                label, forms = None, []
-
 
     def _get_pronunciations(self, root):
         """ Returns list of IPA for regular and 'alternative' pronunciation. """
