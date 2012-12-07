@@ -5,7 +5,8 @@ import unittest
 import urllib2
 from os import path, getenv
 
-from api import LearnersDictionary, WordNotFoundException
+from api import (LearnersDictionary, CollegiateDictionary,
+                 WordNotFoundException, InvalidAPIKeyException)
 
 TEST_DIR = path.dirname(__file__)
 
@@ -115,6 +116,28 @@ class LearnersTests(MerriamWebsterTestCase):
             except WordNotFoundException as e:
                 self.assertTrue(len(e.suggestions) > 0)
                 raise e
+
+    def test_handle_malformed_xml(self):
+        with self.assertRaisesRegexp(WordNotFoundException,
+                                     r'.* not found\.( Try:.*)?$'):
+            list(self.dictionary.lookup("3rd"))
+
+
+class CollegiateTests(MerriamWebsterTestCase):
+
+    dict_class = CollegiateDictionary
+
+    def test_lookup(self):
+        list(self.dictionary.lookup("test"))
+        list(self.dictionary.lookup("resume"))
+        with self.assertRaises(WordNotFoundException):
+            list(self.dictionary.lookup("wooza"))
+        self.dictionary.api_key += "zzz"
+        with self.assertRaises(InvalidAPIKeyException):
+            list(self.dictionary.lookup("something"))
+        self.dictionary.api_key = None
+        with self.assertRaises(InvalidAPIKeyException):
+            list(self.dictionary.lookup("anything"))
 
     def test_handle_malformed_xml(self):
         with self.assertRaisesRegexp(WordNotFoundException,

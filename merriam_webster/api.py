@@ -248,3 +248,9 @@ class LearnersDictionaryEntry(object):
         base_url = "www.learnersdictionary.com/art/ld"
         fragment = re.sub(r'\.(tif|eps)', '.gif', fragment)
         return "{0}/{1}".format(base_url, fragment)
+
+class CollegiateDictionary(MWApiWrapper):
+    base_url = "http://www.dictionaryapi.com/api/v1/references/collegiate"
+
+    def parse_xml(self, root, word):
+        pass
