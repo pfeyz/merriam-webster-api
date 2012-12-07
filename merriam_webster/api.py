@@ -3,7 +3,7 @@
 import re
 import xml.etree.cElementTree as ElementTree
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from urllib import quote, quote_plus
 from urllib2 import urlopen
 
@@ -40,10 +40,49 @@ class MWApiWrapper:
         self.key = key
         self.urlopen = urlopen
 
-    @abstractmethod
-    def request_url(self, *args):
-        """   """
+    @abstractproperty
+    def base_url():
+        """ The api enpoint url without trailing slash or format (/xml).
+
+        """
         pass
+
+    @abstractmethod
+    def parse_xml(root, word):
+        pass
+
+    def request_url(self, word):
+        """ Returns the target url for an API GET request (w/ API key).
+
+        >>> class MWDict(MWApiWrapper):
+        ...     base_url = "mw.com/my-api-endpoint"
+        ...     def parse_xml(): pass
+        >>> MWDict("API-KEY").request_url("word")
+        'mw.com/my-api-endpoint/xml/word?key=API-KEY'
+
+        Override this method if you need something else.
+        """
+
+        if self.key is None:
+            raise Exception("API key not set")
+        qstring = "{0}?key={1}".format(quote(word), quote_plus(self.key))
+        return ("{0}/xml/{1}").format(self.base_url, qstring)
+
+    def lookup(self, word):
+        response = self.urlopen(self.request_url(word))
+        data = response.read()
+        try:
+            root = ElementTree.fromstring(data)
+        except ElementTree.ParseError:
+            if re.search("Invalid API key", data):
+                raise InvalidAPIKeyException()
+            data = re.sub(r'&(?!amp;)', '&amp;', data)
+            try:
+                root = ElementTree.fromstring(data)
+            except ElementTree.ParseError:
+                raise InvalidResponseException(word)
+
+        return self.parse_xml(root, word)
 
     def _flatten_tree(self, root, exclude=None):
         """ Returns a list containing the (non-None) .text and .tail for all
@@ -70,19 +109,9 @@ class MWApiWrapper:
 
 class LearnersDictionary(MWApiWrapper):
 
-    def lookup(self, word):
-        response = self.urlopen(self.request_url(word))
-        data = response.read()
-        try:
-            root = ElementTree.fromstring(data)
-        except ElementTree.ParseError:
-            if re.search("Invalid API key", data):
-                raise InvalidAPIKeyException()
-            data = re.sub(r'&(?!amp;)', '&amp;', data)
-            try:
-                root = ElementTree.fromstring(data)
-            except ElementTree.ParseError:
-                raise InvalidResponseException(word)
+    base_url = "http://www.dictionaryapi.com/api/v1/references/learners"
+
+    def parse_xml(self, root, word):
         entries = root.findall("entry")
         if not entries:
             suggestions = root.findall("suggestion")
@@ -106,13 +135,6 @@ class LearnersDictionary(MWApiWrapper):
             yield LearnersDictionaryEntry(
                 re.sub(r'(?:\[\d+\])?\s*', '', entry.get('id')),
                        args)
-
-    def request_url(self, word):
-        if self.key is None:
-            raise Exception("API key not set")
-        qstring = "{0}?key={1}".format(quote(word), quote_plus(self.key))
-        return ("http://www.dictionaryapi.com/api/v1/references/learners"
-                "/xml/{0}").format(qstring)
 
     def _get_inflections(self, root):
         """ Returns a generator of Inflections found in root.
