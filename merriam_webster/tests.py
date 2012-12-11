@@ -132,12 +132,12 @@ class CollegiateTests(MerriamWebsterTestCase):
         list(self.dictionary.lookup("resume"))
         with self.assertRaises(WordNotFoundException):
             list(self.dictionary.lookup("wooza"))
-        self.dictionary.api_key += "zzz"
         with self.assertRaises(InvalidAPIKeyException):
-            list(self.dictionary.lookup("something"))
-        self.dictionary.api_key = None
+            d = self.dict_class(self.api_key + 'zzz')
+            list(d.lookup("something"))
         with self.assertRaises(InvalidAPIKeyException):
-            list(self.dictionary.lookup("anything"))
+            d = self.dict_class(None)
+            list(d.lookup("anything"))
 
     def test_handle_malformed_xml(self):
         with self.assertRaisesRegexp(WordNotFoundException,
