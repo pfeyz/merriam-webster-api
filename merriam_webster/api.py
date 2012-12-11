@@ -7,28 +7,6 @@ from abc import ABCMeta, abstractmethod
 from urllib import quote, quote_plus
 from urllib2 import urlopen
 
-"""
-undocumented: formula, table
-
-<!ELEMENT entry ((art*, formula?, table?),
-                  hw, hsl?, (pr | altpr)?,
-                  (ahw, hsl?, (pr, altpr)?)*,
-                  vr?, fl?, lb*, in*,
-                  ((dx) | (cx?, def?))?,
-                  dro*, dxnl*, uro*, syns*)>
-
-TODO:
-
-  - capture usage notes in a separate member var?
-
-  - include uro (undefined runoff)? these appear to be variations on the entry
-    word and have usage examples but no definitions.
-
-  - Merriam Webster seems not to be encoding & correctly in their <suggestion>
-    tags.
-
-"""
-
 class WordNotFoundException(KeyError):
     def __init__(self, word, suggestions=None, *args, **kwargs):
         self.word = word
