@@ -11,6 +11,28 @@ TEST_DIR = path.dirname(__file__)
 
 class MerriamWebsterTestCase(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        """ Sets class api_key, data_dir and request_prefix class variables.
+
+        Assumes the `Name` portion of `NameTests` will work for all three
+        variables.
+        """
+
+        name = re.sub(r'Tests$', '', cls.__name__).lower()
+        cls.api_key = getenv('MERRIAM_WEBSTER_{0}_KEY'.format(name.upper()))
+        cls.data_dir = path.join(TEST_DIR, 'test_data', name)
+        cls.request_prefix = ('http://www.dictionaryapi.com/api/v1/references/'
+                              '{0}/xml/').format(name)
+
+    def setUp(self):
+        """ Initializes dictionary instance variable that uses the mocked
+        urlopen funciton.
+
+        """
+        self.dictionary = self.dict_class(self.api_key,
+                                          self._cached_url_opener())
+
     def _cached_url_opener(self):
         """ Mocks urllib2.urlopen.
 
@@ -36,18 +58,9 @@ class MerriamWebsterTestCase(unittest.TestCase):
         return opener
 
 
-class LearnerTests(MerriamWebsterTestCase):
+class LearnersTests(MerriamWebsterTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.api_key = getenv("MERRIAM_WEBSTER_LEARNERS_KEY")
-        cls.data_dir = path.join(TEST_DIR, "test_data", "learners")
-        cls.request_prefix = \
-            "http://www.dictionaryapi.com/api/v1/references/learners/xml/"
-
-    def setUp(self):
-        self.dictionary = LearnersDictionary(self.api_key,
-                                             self._cached_url_opener())
+    dict_class = LearnersDictionary
 
     def test_attribute_parsing(self):
         entries = list(self.dictionary.lookup("pirate"))
