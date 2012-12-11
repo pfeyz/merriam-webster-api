@@ -64,7 +64,7 @@ class MWApiWrapper:
         """
 
         if self.key is None:
-            raise Exception("API key not set")
+            raise InvalidAPIKeyException("API key not set")
         qstring = "{0}?key={1}".format(quote(word), quote_plus(self.key))
         return ("{0}/xml/{1}").format(self.base_url, qstring)
 
