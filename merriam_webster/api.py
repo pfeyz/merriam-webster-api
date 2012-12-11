@@ -82,6 +82,11 @@ class MWApiWrapper:
             except ElementTree.ParseError:
                 raise InvalidResponseException(word)
 
+        suggestions = root.findall("suggestion")
+        if suggestions:
+            suggestions = [s.text for s in suggestions]
+            raise WordNotFoundException(word, suggestions)
+
         return self.parse_xml(root, word)
 
     def _flatten_tree(self, root, exclude=None):
@@ -113,11 +118,6 @@ class LearnersDictionary(MWApiWrapper):
 
     def parse_xml(self, root, word):
         entries = root.findall("entry")
-        if not entries:
-            suggestions = root.findall("suggestion")
-            if suggestions:
-                suggestions = [s.text for s in suggestions]
-            raise WordNotFoundException(word, suggestions)
         for num, entry in enumerate(entries):
             args = {}
             args['illustration_fragments'] = [e.get('id') for e in
