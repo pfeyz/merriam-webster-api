@@ -1,0 +1,16 @@
+
+http://www.dictionaryapi.com/content/products/documentation/collegiate-tag-description.txt
+
+* collegiate's HW has inf, sup and it elements
+
+  inf: text | it | rom
+  it: text | sup | inf
+  sup: text | it | rom
+  rom: text
+
+  it, rom and sup appear to be italics, roman and supertext which are all
+  markup. I'll just flatten the tree I suppose.
+
+  sense markers appear in <sup> instead of [n].
+
+* only one illustration per headword, only one audiofile per pron

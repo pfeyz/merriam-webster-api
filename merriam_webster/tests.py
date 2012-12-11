@@ -144,6 +144,60 @@ class CollegiateTests(MerriamWebsterTestCase):
                                      r'.* not found\.( Try:.*)?$'):
             list(self.dictionary.lookup("3rd"))
 
+    def test_attribute_parsing(self):
+        results = list(self.dictionary.lookup('spry'))
+        self.assertEquals(len(results), 3)
+        entry = results[0]
+        self.assertEquals('spry', entry.word)
+        self.assertEquals('adjective', entry.function)
+        self.assertEquals("\\ˈsprī\\", entry.pronunciation)
+        inflections = list(entry.inflections)
+        self.assertEquals(4, len(inflections))
+        for expected, observed in zip([('spri*er', 'spry*er'),
+                                       ('spri*est', 'spry*est')],
+                                      inflections = list(entry.inflections)):
+            self.assertEquals(expected, observed)
+        senses = list(entry.senses)
+        self.assertEquals(len(senses), 1)
+        sense = senses[0]
+        self.assertEquals(sense.definition, 'nimble')
+        self.assertEquals(sense.examples[0], 'a spry 75 year-old')
+
+        self.assertEquals('sprier', results[1].word)
+        self.assertEquals('spriest', results[2].word)
+
+        results = list(self.dictionary.lookup("hack"))
+        self.assertEquals(len(results), 7)
+        self.assertEquals('noun', results[0].function)
+        self.assertEquals('adjective', results[3].function)
+        self.assertEquals('transitive verb', results[5].function)
+
+        entry = results[0]
+        self.assertEquals('hack', entry.word)
+        self.assertEquals('noun', entry.function)
+        self.assertEquals("\\ˈhak\\", entry.pronunciation)
+        for e in results[1:]:
+            self.assertEquals(None, e.pronunciation)
+        senses = list(entry.senses)
+        self.assertEquals(13, len(senses))
+        self.assertTrue(senses[0].definition.startswith('to cut or sever'))
+        self.assertTrue(senses[1].definition.startswith('to cut or shape'))
+        self.assertTrue(senses[3].definition.startswith('annoy, vex —often '))
+        self.assertTrue(senses[1].examples[0] == \
+                            'hacking out new election districts')
+        self.assertTrue(senses[6].definition.startswith('to make chopping'))
+        self.assertTrue(senses[6].examples[0].startswith('hacked at'))
+        self.assertTrue(senses[7].definition.startswith('to make cuts as if'))
+        self.assertTrue(senses[7].examples[0].startswith('hacking away at'))
+
+        entry = results[2]
+        self.assertEquals('hack', entry.word)
+        self.assertEquals('noun', entry.function)
+        senses = list(entry.senses)
+        self.assertEquals(len(senses), 13)
+
+        sense = senses[5]
+        self.assertEquals(sense.definition, 'a horse worn out in service; jade')
 
 if __name__ == '__main__':
     unittest.main()
