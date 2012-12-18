@@ -219,7 +219,18 @@ class WordSense(object):
         yield self.definition
         yield self.examples
 
-class LearnersDictionaryEntry(object):
+class MWDictionaryEntry(object):
+    def build_sound_url(self, fragment):
+        base_url = "http://media.merriam-webster.com/soundc11"
+        prefix_match = re.search(r'^([0-9]+|gg|bix)', fragment)
+        if prefix_match:
+            prefix = prefix_match.group(1)
+        else:
+            prefix = fragment[0]
+        return "{0}/{1}/{2}".format(base_url, prefix, fragment)
+
+
+class LearnersDictionaryEntry(MWDictionaryEntry):
     def __init__(self, word, attrs):
         # word,  pronounce, sound_url, art_url, inflection, pos
 
@@ -235,27 +246,21 @@ class LearnersDictionaryEntry(object):
         self.illustrations = [self.build_illustration_url(f) for f in
                               attrs.get("illustration_fragments")]
 
-    def build_sound_url(self, fragment):
-        base_url = "http://media.merriam-webster.com/soundc11"
-        prefix_match = re.search(r'^([0-9]+|gg|bix)', fragment)
-        if prefix_match:
-            prefix = prefix_match.group(1)
-        else:
-            prefix = fragment[0]
-        return "{0}/{1}/{2}".format(base_url, prefix, fragment)
-
     def build_illustration_url(self, fragment):
         base_url = "www.learnersdictionary.com/art/ld"
         fragment = re.sub(r'\.(tif|eps)', '.gif', fragment)
         return "{0}/{1}".format(base_url, fragment)
 
-class CollegiateDictionaryEntry(object):
+class CollegiateDictionaryEntry(MWDictionaryEntry):
     def __init__(self, word, attrs):
         self.word = word
         self.headword = attrs.get('headword')
         self.function = attrs.get('functional_label')
         self.pronunciations = attrs.get("pronunciations")
         self.inflections = attrs.get("inflections")
+        self.senses = attrs.get("senses")
+        self.audio = [self.build_sound_url(f) for f in
+                      attrs.get("sound_fragments")]
 
 """
 <!ELEMENT entry
@@ -279,12 +284,17 @@ class CollegiateDictionary(MWApiWrapper):
 
     def parse_xml(self, root, word):
         for entry in root.findall('entry'):
-            attrs = {}
-            attrs['headword'] = entry.find('hw').text
-            attrs['functional_label'] = getattr(entry.find('fl'), 'text', None)
-            attrs['pronunciations'] = self._get_pronunciations(entry)
-            attrs['inflections'] = self._get_inflections(entry)
-            yield CollegiateDictionaryEntry(word, attrs)
+            args = {}
+            args['headword'] = entry.find('hw').text
+            args['functional_label'] = getattr(entry.find('fl'), 'text', None)
+            args['pronunciations'] = self._get_pronunciations(entry)
+            args['inflections'] = self._get_inflections(entry)
+            args['senses'] = self._get_senses(entry)
+            args['sound_fragments'] = []
+            sound = entry.find("sound")
+            if sound:
+                args['sound_fragments'] = [s.text for s in sound]
+            yield CollegiateDictionaryEntry(word, args)
 
     def _get_pronunciations(self, root):
         """ Returns list of IPA for regular and 'alternative' pronunciation. """
@@ -316,3 +326,43 @@ class CollegiateDictionary(MWApiWrapper):
                     forms.append(child.text)
             if label is not None or forms != []:
                 yield Inflection(label, forms)
+
+    """
+
+    <!ELEMENT def (vt?, date?, sl*, sense, ss?, us?)+ >
+
+    <!ELEMENT sense (sn?,
+                    (sp, sp_alt?, sp_ipa?, sp_wod?, sound?)?,
+                    svr?, sin*, slb*, set?, ssl*, dt*,
+                    (sd, sin?,
+                      (sp, sp_alt?, sp_ipa?, sp_wod?, sound?)?,
+                    slb*, ssl*, dt+)?)>
+    """
+
+    def _get_senses(self, root):
+        """ Returns a generator yielding tuples of definitions and example
+        sentences: (definition_string, list_of_usage_example_strings). Each
+        tuple should represent a different sense of the word.
+
+        """
+        for definition in root.findall('./def/dt'):
+            # could add support for phrasal verbs here by looking for
+            # <gram>phrasal verb</gram> and then looking for the phrase
+            # itself in <dre>phrase</dre> in the def node or its parent.
+            dstring = self._stringify_tree(definition,
+                                          exclude=['vi', 'wsgram',
+                                                   'ca', 'dx', 'snote',
+                                                   'un'])
+            dstring = re.sub("^:", "", dstring)
+            dstring = re.sub(r'(\s*):', r';\1', dstring).strip()
+            if not dstring:  # use usage note instead
+                un = definition.find('un')
+                if un is not None:
+                    dstring = self._stringify_tree(un, exclude=['vi'])
+            usage = [self._vi_to_text(u).strip()
+                     for u in definition.findall('.//vi')]
+            yield WordSense(dstring, usage)
+
+    def _vi_to_text(self, root):
+        example = self._stringify_tree(root)
+        return re.sub(r'\s*\[=.*?\]', '', example)
