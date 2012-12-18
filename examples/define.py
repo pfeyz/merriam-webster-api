@@ -23,23 +23,31 @@ from Merriam Webster.
 import os
 import sys
 
-from merriam_webster.api import LearnersDictionary, WordNotFoundException
+from merriam_webster.api import (LearnersDictionary, CollegiateDictionary,
+                                 WordNotFoundException)
 
-if __name__ == "__main__":
-    query = " ".join(sys.argv[1:])
-    key = os.getenv("MERRIAM_WEBSTER_LEARNERS_KEY")  # gets your api key
-    learners = LearnersDictionary(key)
+def lookup(dictionary_class, key, query):
+    dictionary = dictionary_class(key)
     try:
         defs = [(entry.word, entry.function, definition)
-                for entry in learners.lookup(query)
+                for entry in dictionary.lookup(query)
                 for definition, examples in entry.senses
                 # some senses will not have definitions, only usage examples.
                 # also, the api will return related words different from what we
                 # queried.
-                if definition and entry.word == query]
+                if definition and entry.headword == query]
     except WordNotFoundException:
         defs = []
+    dname = dictionary_class.__name__.replace('Dictionary', '').upper()
     if defs == []:
-        print "No definitions found for '{0}'".format(query)
+        print "{0}: No definitions found for '{1}'".format(dname, query)
     for word, pos, definition in defs:
-        print "{0} [{1}]: {2}".format(word, pos, definition)
+        print "{0}: {1} [{2}]: {3}".format(dname, word, pos, definition)
+
+
+if __name__ == "__main__":
+    query = " ".join(sys.argv[1:])
+    lookup(LearnersDictionary, os.getenv("MERRIAM_WEBSTER_LEARNERS_KEY"),
+           query)
+    lookup(CollegiateDictionary, os.getenv("MERRIAM_WEBSTER_COLLEGIATE_KEY"),
+           query)
