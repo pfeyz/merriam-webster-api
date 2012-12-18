@@ -149,14 +149,15 @@ class CollegiateTests(MerriamWebsterTestCase):
         self.assertEquals(len(results), 3)
         entry = results[0]
         self.assertEquals('spry', entry.word)
+        self.assertEquals('spry', entry.headword)
         self.assertEquals('adjective', entry.function)
-        self.assertEquals("\\ˈsprī\\", entry.pronunciation)
+        self.assertEquals(u"ˈsprī", entry.pronunciations[0])
         inflections = list(entry.inflections)
-        self.assertEquals(4, len(inflections))
-        for expected, observed in zip([('spri*er', 'spry*er'),
-                                       ('spri*est', 'spry*est')],
-                                      inflections = list(entry.inflections)):
-            self.assertEquals(expected, observed)
+        self.assertEquals(2, len(inflections))
+        for expected, observed in zip([['spri*er', 'spry*er'],
+                                       ['spri*est', 'spry*est']],
+                                      inflections):
+            self.assertEquals(expected, observed.forms)
         senses = list(entry.senses)
         self.assertEquals(len(senses), 1)
         sense = senses[0]

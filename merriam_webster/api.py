@@ -249,8 +249,70 @@ class LearnersDictionaryEntry(object):
         fragment = re.sub(r'\.(tif|eps)', '.gif', fragment)
         return "{0}/{1}".format(base_url, fragment)
 
+class CollegiateDictionaryEntry(object):
+    def __init__(self, word, attrs):
+        self.word = word
+        self.headword = attrs.get('headword')
+        self.function = attrs.get('functional_label')
+        self.pronunciations = attrs.get("pronunciations")
+        self.inflections = attrs.get("inflections")
+
+"""
+<!ELEMENT entry
+  (((subj?, art?, formula?, table?),
+        hw,
+        (pr?, pr_alt?, pr_ipa?, pr_wod?, sound?)*,
+        (ahw, (pr, pr_alt?, pr_ipa?, pr_wod?, sound?)?)*,
+        vr?),
+     (fl?, in*, lb*, ((cx, (ss | us)*) | et)*, sl*),
+     (dx | def)*,
+     (list? |
+       (uro*, dro*, ((pl, pt, sa?) |
+                      (note) |
+                      quote+)*)))>
+
+"""
+
+
 class CollegiateDictionary(MWApiWrapper):
     base_url = "http://www.dictionaryapi.com/api/v1/references/collegiate"
 
     def parse_xml(self, root, word):
-        pass
+        for entry in root.findall('entry'):
+            attrs = {}
+            attrs['headword'] = entry.find('hw').text
+            attrs['functional_label'] = getattr(entry.find('fl'), 'text', None)
+            attrs['pronunciations'] = self._get_pronunciations(entry)
+            attrs['inflections'] = self._get_inflections(entry)
+            yield CollegiateDictionaryEntry(word, attrs)
+
+    def _get_pronunciations(self, root):
+        """ Returns list of IPA for regular and 'alternative' pronunciation. """
+        prons = root.find("./pr")
+        pron_list = []
+        if prons is not None:
+            ps = self._flatten_tree(prons, exclude=['it'])
+            pron_list.extend(ps)
+        return pron_list
+
+    def _get_inflections(self, root):
+        """ Returns a generator of Inflections found in root.
+
+        inflection nodes that have <il>also</il> will have their inflected form
+        added to the previous inflection entry.
+
+        """
+        for node in root.findall("in"):
+            label, forms = None, []
+            for child in node:
+                if child.tag == 'il':
+                    if child.text in ['also', 'or']:
+                        pass  # next form will be added to prev inflection-list
+                    else:
+                        if label is not None or forms != []:
+                            yield Inflection(label, forms)
+                        label, forms = child.text, []
+                if child.tag == 'if':
+                    forms.append(child.text)
+            if label is not None or forms != []:
+                yield Inflection(label, forms)
