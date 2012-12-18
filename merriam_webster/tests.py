@@ -207,5 +207,9 @@ class CollegiateTests(MerriamWebsterTestCase):
         sense = senses[5]
         self.assertEquals(sense.definition, 'a horse worn out in service; jade')
 
+        results = list(self.dictionary.lookup('heart'))
+        self.assertEquals('http://www.merriam-webster.com/art/dict/heart.htm',
+                          results[0].illustrations[0],)
+
 if __name__ == '__main__':
     unittest.main()

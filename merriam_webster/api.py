@@ -261,6 +261,15 @@ class CollegiateDictionaryEntry(MWDictionaryEntry):
         self.senses = attrs.get("senses")
         self.audio = [self.build_sound_url(f) for f in
                       attrs.get("sound_fragments")]
+        self.illustrations = [self.build_illustration_url(f) for f in
+                              attrs.get("illustration_fragments")]
+
+
+    def build_illustration_url(self, fragment):
+        base_url = 'http://www.merriam-webster.com/art/dict'
+        fragment = re.sub(r'\.(bmp)', '.htm', fragment)
+        return "{0}/{1}".format(base_url, fragment)
+
 
 """
 <!ELEMENT entry
@@ -291,6 +300,9 @@ class CollegiateDictionary(MWApiWrapper):
             args['inflections'] = self._get_inflections(entry)
             args['senses'] = self._get_senses(entry)
             args['sound_fragments'] = []
+            args['illustration_fragments'] = [e.text for e in
+                                              entry.findall("art/bmp")
+                                              if e.text]
             sound = entry.find("sound")
             if sound:
                 args['sound_fragments'] = [s.text for s in sound]
