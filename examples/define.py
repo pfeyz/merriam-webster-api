@@ -31,11 +31,7 @@ def lookup(dictionary_class, key, query):
     try:
         defs = [(entry.word, entry.function, definition)
                 for entry in dictionary.lookup(query)
-                for definition, examples in entry.senses
-                # some senses will not have definitions, only usage examples.
-                # also, the api will return related words different from what we
-                # queried.
-                if definition and entry.headword == query]
+                for definition, examples in entry.senses]
     except WordNotFoundException:
         defs = []
     dname = dictionary_class.__name__.replace('Dictionary', '').upper()
