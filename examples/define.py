@@ -43,7 +43,13 @@ def lookup(dictionary_class, key, query):
 
 if __name__ == "__main__":
     query = " ".join(sys.argv[1:])
-    lookup(LearnersDictionary, os.getenv("MERRIAM_WEBSTER_LEARNERS_KEY"),
-           query)
-    lookup(CollegiateDictionary, os.getenv("MERRIAM_WEBSTER_COLLEGIATE_KEY"),
-           query)
+    learnkey, collkey = (os.getenv("MERRIAM_WEBSTER_LEARNERS_KEY"),
+                         os.getenv("MERRIAM_WEBSTER_COLLEGIATE_KEY"))
+    if not (learnkey or collkey):
+        print ("set the MERRIAM_WEBSTER_LEARNERS_KEY and/or MERRIAM_WEBSTER_"
+               "COLLEGIATE_KEY environmental variables to your Merriam-Webster "
+               "API keys in order to perform lookups.")
+    if learnkey:
+        lookup(LearnersDictionary, learnkey, query)
+    if collkey:
+        lookup(CollegiateDictionary, collkey, query)
