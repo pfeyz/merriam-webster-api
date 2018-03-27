@@ -4,8 +4,8 @@ import re
 import xml.etree.cElementTree as ElementTree
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from urllib import quote, quote_plus
-from urllib2 import urlopen
+from urllib.parse import quote, quote_plus
+from urllib.request import urlopen
 
 class WordNotFoundException(KeyError):
     def __init__(self, word, suggestions=None, *args, **kwargs):
