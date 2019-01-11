@@ -70,7 +70,7 @@ class MWApiWrapper:
 
     def lookup(self, word):
         response = self.urlopen(self.request_url(word))
-        data = response.read()
+        data = response.read().decode('utf-8')
         try:
             root = ElementTree.fromstring(data)
         except ElementTree.ParseError:

@@ -2,7 +2,7 @@
 
 import re
 import unittest
-import urllib2
+import urllib
 from os import path, getenv
 
 from api import (LearnersDictionary, CollegiateDictionary,
@@ -35,7 +35,7 @@ class MerriamWebsterTestCase(unittest.TestCase):
                                           self._cached_url_opener())
 
     def _cached_url_opener(self):
-        """ Mocks urllib2.urlopen.
+        """ Mocks urllib.request.urlopen.
 
         Returns a function which returns cached-to-disk MW data.
 
@@ -50,12 +50,12 @@ class MerriamWebsterTestCase(unittest.TestCase):
             fn = re.sub(r"\?.*$", "", fn)  # strip api key
             fn = path.join(self.data_dir, "{0}.xml".format(fn))
             try:
-                return open(fn, 'r')
-            except IOError:
-                data = urllib2.urlopen(url)
-                with open(fn, 'w') as fh:
+                return open(fn, 'rb')
+            except (urllib.error.URLError, FileNotFoundError):
+                data = urllib.request.urlopen(url)
+                with open(fn, 'wb') as fh:
                     fh.write(data.read())
-                return open(fn, 'r')
+                return open(fn, 'rb')
         return opener
 
 
@@ -91,7 +91,6 @@ class LearnersTests(MerriamWebsterTestCase):
         self.assertTrue(
             sense.definition.startswith("someone who illegally copies"))
         self.assertEqual(3, len(sense.examples))
-
         entries = list(self.dictionary.lookup("starfish"))
         starfish = entries[0]
         inflections = list(starfish.inflections)
