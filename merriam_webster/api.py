@@ -378,3 +378,7 @@ class CollegiateDictionary(MWApiWrapper):
     def _vi_to_text(self, root):
         example = self._stringify_tree(root)
         return re.sub(r'\s*\[=.*?\]', '', example)
+
+class IntermediateDictionary(CollegiateDictionary):
+    base_url = base_url = "http://www.dictionaryapi.com/api/v1/references/intermediate"
+
