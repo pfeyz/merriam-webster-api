@@ -1,0 +1,8 @@
+from merriam_webster.api import WordNotFoundException
+
+class InvalidResponseException(WordNotFoundException):
+    def __init__(self, word, *args, **kwargs):
+        self.word = word
+        self.suggestions = []
+        message = "{0} not found. (Malformed XML from server).".format(word)
+        KeyError.__init__(self, message, *args, **kwargs)
