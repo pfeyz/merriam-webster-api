@@ -2,10 +2,10 @@
 
 import re
 import unittest
-import urllib2
+import urllib
 from os import path, getenv
 
-from api import (LearnersDictionary, CollegiateDictionary,
+from api import (LearnersDictionary, CollegiateDictionary, IntermediateDictionary,
                  WordNotFoundException, InvalidAPIKeyException)
 
 TEST_DIR = path.dirname(__file__)
@@ -35,7 +35,7 @@ class MerriamWebsterTestCase(unittest.TestCase):
                                           self._cached_url_opener())
 
     def _cached_url_opener(self):
-        """ Mocks urllib2.urlopen.
+        """ Mocks urllib.request.urlopen.
 
         Returns a function which returns cached-to-disk MW data.
 
@@ -50,12 +50,12 @@ class MerriamWebsterTestCase(unittest.TestCase):
             fn = re.sub(r"\?.*$", "", fn)  # strip api key
             fn = path.join(self.data_dir, "{0}.xml".format(fn))
             try:
-                return open(fn, 'r')
-            except IOError:
-                data = urllib2.urlopen(url)
-                with open(fn, 'w') as fh:
+                return open(fn, 'rb')
+            except (urllib.error.URLError, FileNotFoundError):
+                data = urllib.request.urlopen(url)
+                with open(fn, 'wb') as fh:
                     fh.write(data.read())
-                return open(fn, 'r')
+                return open(fn, 'rb')
         return opener
 
 
@@ -91,7 +91,6 @@ class LearnersTests(MerriamWebsterTestCase):
         self.assertTrue(
             sense.definition.startswith("someone who illegally copies"))
         self.assertEqual(3, len(sense.examples))
-
         entries = list(self.dictionary.lookup("starfish"))
         starfish = entries[0]
         inflections = list(starfish.inflections)
@@ -126,6 +125,95 @@ class LearnersTests(MerriamWebsterTestCase):
 class CollegiateTests(MerriamWebsterTestCase):
 
     dict_class = CollegiateDictionary
+
+    def test_lookup(self):
+        list(self.dictionary.lookup("test"))
+        list(self.dictionary.lookup("resume"))
+        with self.assertRaises(WordNotFoundException):
+            list(self.dictionary.lookup("wooza"))
+        with self.assertRaises(InvalidAPIKeyException):
+            d = self.dict_class(self.api_key + 'zzz')
+            list(d.lookup("something"))
+        with self.assertRaises(InvalidAPIKeyException):
+            d = self.dict_class(None)
+            list(d.lookup("anything"))
+
+    def test_handle_malformed_xml(self):
+        with self.assertRaisesRegexp(WordNotFoundException,
+                                     r'.* not found\.( Try:.*)?$'):
+            list(self.dictionary.lookup("3rd"))
+
+    def test_attribute_parsing(self):
+        results = list(self.dictionary.lookup('spry'))
+        self.assertEquals(len(results), 3)
+        entry = results[0]
+        self.assertEquals('spry', entry.word)
+        self.assertEquals('spry', entry.headword)
+        self.assertEquals('adjective', entry.function)
+        self.assertEquals(u"ˈsprī", entry.pronunciations[0])
+        inflections = list(entry.inflections)
+        self.assertEquals(2, len(inflections))
+        for expected, observed in zip([['spri*er', 'spry*er'],
+                                       ['spri*est', 'spry*est']],
+                                      inflections):
+            self.assertEquals(expected, observed.forms)
+        senses = list(entry.senses)
+        self.assertEquals(len(senses), 1)
+        sense = senses[0]
+        self.assertEquals(sense.definition, 'nimble')
+        self.assertEquals(sense.examples[0], 'a spry 75-year-old')
+
+        self.assertEquals('sprier', results[1].headword)
+        self.assertEquals('spriest', results[2].headword)
+
+        results = list(self.dictionary.lookup("hack"))
+        self.assertEquals(len(results), 7)
+        self.assertEquals('verb', results[0].function)
+        self.assertEquals('adjective', results[3].function)
+        self.assertEquals('verb', results[5].function)
+        self.assertEquals(
+            "http://media.merriam-webster.com/soundc11/s/spry0001.wav",
+            entry.audio[0])
+
+        entry = results[0]
+        self.assertEquals('hack', entry.word)
+        self.assertEquals('verb', entry.function)
+        self.assertEquals(u"ˈhak", entry.pronunciations[0])
+        for e in results[1:]:
+            self.assertEquals([], e.pronunciations)
+        senses = list(entry.senses)
+        self.assertEquals(13, len(senses))
+
+        self.assertTrue(senses[0].definition.startswith('to cut or sever'))
+        self.assertTrue(senses[1].definition.startswith('to cut or shape'))
+        self.assertEquals('annoy vex', senses[2].definition)
+        self.assertTrue(senses[1].examples[0] == \
+                            'hacking out new election districts')
+        self.assertTrue(senses[6].definition.startswith('to make chopping'))
+        self.assertTrue(senses[6].examples[0].startswith('hacked at'))
+        self.assertTrue(senses[7].definition.startswith('to make cuts as if'))
+        self.assertTrue(senses[7].examples[0].startswith('hacking away at'))
+        self.assertEquals(
+            "http://media.merriam-webster.com/soundc11/h/hack0001.wav",
+            entry.audio[0])
+
+        entry = results[2]
+        self.assertEquals('hack', entry.word)
+        self.assertEquals('noun', entry.function)
+        senses = list(entry.senses)
+        self.assertEquals(len(senses), 13)
+
+        sense = senses[5]
+        self.assertEquals(sense.definition, 'a horse worn out in service; jade')
+
+        results = list(self.dictionary.lookup('heart'))
+        self.assertEquals('http://www.merriam-webster.com/art/dict/heart.htm',
+                          results[0].illustrations[0],)
+
+
+class IntermediateTests(MerriamWebsterTestCase):
+
+    dict_class = IntermediateDictionary
 
     def test_lookup(self):
         list(self.dictionary.lookup("test"))

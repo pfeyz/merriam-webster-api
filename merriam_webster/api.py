@@ -4,8 +4,8 @@ import re
 import xml.etree.cElementTree as ElementTree
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from urllib import quote, quote_plus
-from urllib2 import urlopen
+from urllib.parse import quote, quote_plus
+from urllib.request import urlopen
 
 class WordNotFoundException(KeyError):
     def __init__(self, word, suggestions=None, *args, **kwargs):
@@ -70,7 +70,7 @@ class MWApiWrapper:
 
     def lookup(self, word):
         response = self.urlopen(self.request_url(word))
-        data = response.read()
+        data = response.read().decode('utf-8')
         try:
             root = ElementTree.fromstring(data)
         except ElementTree.ParseError:
@@ -378,3 +378,7 @@ class CollegiateDictionary(MWApiWrapper):
     def _vi_to_text(self, root):
         example = self._stringify_tree(root)
         return re.sub(r'\s*\[=.*?\]', '', example)
+
+class IntermediateDictionary(CollegiateDictionary):
+    base_url = base_url = "http://www.dictionaryapi.com/api/v1/references/intermediate"
+
